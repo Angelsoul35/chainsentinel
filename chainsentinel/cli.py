@@ -38,8 +38,10 @@ def cmd_demo(args) -> None:
     tp = len(flagged & suspicious)
     precision = tp / len(flagged) if flagged else 0.0
     recall = tp / len(suspicious) if suspicious else 0.0
-    print(f"   {result.n_transactions} transactions, {result.n_accounts} accounts, "
-          f"{len(result.alerts)} alerts")
+    print(
+        f"   {result.n_transactions} transactions, {result.n_accounts} accounts, "
+        f"{len(result.alerts)} alerts"
+    )
     print(f"   precision {precision:.2f}  recall {recall:.2f} (vs known labels)")
 
     print("\n3) Top alerts:")

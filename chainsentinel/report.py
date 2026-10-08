@@ -35,9 +35,7 @@ def template_report(alert: Alert) -> str:
     return "\n".join(lines)
 
 
-def llm_report(
-    alert: Alert, llm: LLMClient | None = None, provider_spec: str | None = None
-) -> str:
+def llm_report(alert: Alert, llm: LLMClient | None = None, provider_spec: str | None = None) -> str:
     client = llm or (build_llm(provider_spec) if provider_spec else build_llm())
     typ = "; ".join(f"{h.name} ({h.detail})" for h in alert.typologies)
     prompt = (
@@ -48,7 +46,9 @@ def llm_report(
 
 
 def build_report(
-    alert: Alert, mode: str = "template", llm: LLMClient | None = None,
+    alert: Alert,
+    mode: str = "template",
+    llm: LLMClient | None = None,
     provider_spec: str | None = None,
 ) -> str:
     if mode == "llm" or llm is not None:

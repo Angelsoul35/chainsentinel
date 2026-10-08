@@ -26,7 +26,9 @@ def test_build_llm_cascade():
 
 def test_report_with_fake_llm():
     alert = Alert(
-        address="x", score=0.9, ml_score=0.8,
+        address="x",
+        score=0.9,
+        ml_score=0.8,
         typologies=[TypologyHit(name="structuring", detail="d", severity=0.9)],
         features={"total_in": 1000},
     )

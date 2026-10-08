@@ -32,8 +32,13 @@ def make_transactions(
     def tx(src: str, dst: str, amount: float, t: int) -> None:
         counter["n"] += 1
         txs.append(
-            {"tx_id": f"tx_{counter['n']:06d}", "src": src, "dst": dst,
-             "amount": round(float(amount), 2), "timestamp": int(t)}
+            {
+                "tx_id": f"tx_{counter['n']:06d}",
+                "src": src,
+                "dst": dst,
+                "amount": round(float(amount), 2),
+                "timestamp": int(t),
+            }
         )
 
     normal = [f"acct_{i:04d}" for i in range(n_normal)]
@@ -87,8 +92,12 @@ def make_transactions(
     suspicious.add(distributor)
     tx("acct_0002", distributor, 500_000, 1000)
     for i in range(20):
-        tx(distributor, f"fanout_{i:03d}", float(rng.uniform(15_000, 30_000)),
-           int(rng.integers(1001, 1010)))
+        tx(
+            distributor,
+            f"fanout_{i:03d}",
+            float(rng.uniform(15_000, 30_000)),
+            int(rng.integers(1001, 1010)),
+        )
 
     rng.shuffle(txs)
     return txs, suspicious

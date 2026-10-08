@@ -15,8 +15,14 @@ from .scoring import combined_score
 from .typologies import detect_typologies
 
 _ALERT_FEATURE_KEYS = [
-    "total_in", "total_out", "in_count", "unique_in", "unique_out",
-    "pct_in_under_threshold", "passthrough_ratio", "in_cycle",
+    "total_in",
+    "total_out",
+    "in_count",
+    "unique_in",
+    "unique_out",
+    "pct_in_under_threshold",
+    "passthrough_ratio",
+    "in_cycle",
 ]
 
 
@@ -72,7 +78,9 @@ class AnalyzeService:
         if with_reports:
             for alert in alerts[:max_reports]:
                 alert.report = build_report(
-                    alert, mode=self.settings.report_mode, llm=self.llm,
+                    alert,
+                    mode=self.settings.report_mode,
+                    llm=self.llm,
                     provider_spec=self.settings.llm_providers,
                 )
 

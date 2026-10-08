@@ -18,19 +18,29 @@ import pandas as pd
 from .graph import build_multigraph, collapse_weighted
 
 FEATURE_COLUMNS = [
-    "in_count", "out_count", "total_in", "total_out", "net_flow",
-    "passthrough_ratio", "unique_in", "unique_out", "avg_in", "std_in",
-    "pct_in_under_threshold", "pct_out_under_threshold", "turnover_gap",
-    "pagerank", "clustering", "in_cycle",
+    "in_count",
+    "out_count",
+    "total_in",
+    "total_out",
+    "net_flow",
+    "passthrough_ratio",
+    "unique_in",
+    "unique_out",
+    "avg_in",
+    "std_in",
+    "pct_in_under_threshold",
+    "pct_out_under_threshold",
+    "turnover_gap",
+    "pagerank",
+    "clustering",
+    "in_cycle",
 ]
 
 
 def _cycle_nodes(weighted: nx.DiGraph, length_bound: int = 5, max_cycles: int = 3000) -> set[str]:
     nodes: set[str] = set()
     try:
-        cycles = itertools.islice(
-            nx.simple_cycles(weighted, length_bound=length_bound), max_cycles
-        )
+        cycles = itertools.islice(nx.simple_cycles(weighted, length_bound=length_bound), max_cycles)
         for cycle in cycles:
             nodes.update(cycle)
     except Exception:  # pragma: no cover - defensive for odd graphs
@@ -72,9 +82,11 @@ def build_features(
     for acc in accounts:
         tin, tout = float(in_sum.get(acc, 0.0)), float(out_sum.get(acc, 0.0))
         passthrough = min(tin, tout) / max(tin, tout) if max(tin, tout) > 0 else 0.0
-        gap = float(out_time.get(acc, 0.0) - in_time.get(acc, 0.0)) if (
-            acc in out_time.index and acc in in_time.index
-        ) else 0.0
+        gap = (
+            float(out_time.get(acc, 0.0) - in_time.get(acc, 0.0))
+            if (acc in out_time.index and acc in in_time.index)
+            else 0.0
+        )
         rows.append(
             {
                 "address": acc,

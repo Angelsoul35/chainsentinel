@@ -15,8 +15,11 @@ def build_multigraph(transactions: list[dict]) -> nx.MultiDiGraph:
     graph = nx.MultiDiGraph()
     for tx in transactions:
         graph.add_edge(
-            tx["src"], tx["dst"], key=tx["tx_id"],
-            amount=float(tx["amount"]), timestamp=int(tx["timestamp"]),
+            tx["src"],
+            tx["dst"],
+            key=tx["tx_id"],
+            amount=float(tx["amount"]),
+            timestamp=int(tx["timestamp"]),
         )
     return graph
 

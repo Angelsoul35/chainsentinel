@@ -54,6 +54,6 @@ def build_report(
     if mode == "llm" or llm is not None:
         try:
             return llm_report(alert, llm=llm, provider_spec=provider_spec)
-        except Exception:  # pragma: no cover - falls back without a provider
+        except Exception:  # a configured provider failed; fall back to the template
             pass
     return template_report(alert)

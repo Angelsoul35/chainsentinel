@@ -8,7 +8,7 @@ from chainsentinel.llm.base import LLMError
 from chainsentinel.llm.cascade import CascadeLLM
 from chainsentinel.llm.factory import build_llm
 from chainsentinel.llm.fake import FailingLLM, FakeLLM
-from chainsentinel.report import build_report
+from chainsentinel.report import build_report, template_report
 from chainsentinel.schema import Alert, TypologyHit
 
 
@@ -33,6 +33,21 @@ def test_report_with_fake_llm():
         features={"total_in": 1000},
     )
     assert build_report(alert, llm=FakeLLM("LLM report text.")) == "LLM report text."
+
+
+def test_report_falls_back_to_template_when_llm_raises():
+    # Graceful degradation is a core guarantee: when a configured LLM throws, the
+    # report must still be produced from the deterministic template, never error out.
+    alert = Alert(
+        address="x",
+        score=0.9,
+        ml_score=0.8,
+        typologies=[TypologyHit(name="structuring", detail="d", severity=0.9)],
+        features={"total_in": 1000},
+    )
+    result = build_report(alert, llm=FailingLLM("broken"))
+    assert result == template_report(alert)
+    assert "structuring" in result  # the deterministic content really is there
 
 
 def test_api(service):

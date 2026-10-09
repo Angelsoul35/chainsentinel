@@ -18,7 +18,7 @@ class Settings(BaseSettings):
     # point whose recall stays >= 0.98 on the *worst* of them. In AML a missed
     # launderer is the expensive error, so recall is the binding constraint and
     # precision is maximised beneath it. The test graphs (777, 888, 999, 1234,
-    # 2024) are never used for tuning, so their reported metrics are honest.
+    # 2024) are never used for tuning, so their reported metrics measure generalisation, not fit.
     alert_threshold: float = 0.81
     report_mode: str = "template"  # template | llm
     llm_providers: str = "anthropic,openai,gemini,deepseek,ollama"

@@ -18,7 +18,7 @@ entrevista. El código y la documentación técnica están en inglés; aquí va 
 ```bash
 make install
 make demo                          # entrena, analiza un grafo, muestra alertas y un SAR
-python -m chainsentinel.evaluate   # evaluación honesta: train/validación/prueba en grafos distintos
+python -m chainsentinel.evaluate   # evaluación sin fuga: train/validación/prueba en grafos distintos
 make test                          # 17 pruebas (fusión y confundidores con prueba de mutación)
 ```
 

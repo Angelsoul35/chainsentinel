@@ -20,7 +20,7 @@ is not confused with a structuring collector.
 * **Good:** the cycle signal is clean (a cycle is a real signal), and the typologies separate
   well. The features reflect the real structure of laundering.
 * **Cost:** the background is simpler than real traffic. Real data has legitimate cycles
-  (refunds, exchanges), so the cycle rule there needs more care; the README is honest about it.
+  (refunds, exchanges), so the cycle rule there needs more care; the README documents it.
 
 ## Update (2026-10-09): realistic confounders added
 

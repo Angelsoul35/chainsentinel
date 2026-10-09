@@ -162,7 +162,7 @@ def choose_threshold(
     over *several* validation graphs (not one, which is noisy) and the recall
     floor is enforced on the **worst** validation graph, so the operating point
     is robust rather than lucky. The test graphs are never used here, so the
-    reported test metrics stay honest.
+    reported test metrics measure generalisation, not tuning.
     """
     val = []
     for seed in val_seeds:

@@ -117,7 +117,7 @@ def make_transactions(
             )
 
     # 2e. Sub-threshold vendor: invoices repeatedly just under the threshold
-    #     (e.g. a contractor) -> looks like structuring, but is a single honest biller.
+    #     (e.g. a contractor) -> looks like structuring, but is a single legitimate biller.
     for k in range(4):
         vendor = f"acct_vendor_{k:02d}"
         for _ in range(int(rng.integers(3, 7))):
@@ -128,7 +128,7 @@ def make_transactions(
     #     MSB takes many sub-threshold deposits from clients AND forwards most of
     #     it onward quickly to a couple of settlement accounts -> it trips BOTH the
     #     structuring and the layering signatures at once, exactly as a collector
-    #     would. Real AML systems false-positive on MSBs; so does any honest model.
+    #     would. Real AML systems false-positive on MSBs; so does this one.
     for k in range(4):
         msb = f"acct_msb_{k:02d}"
         received = 0.0

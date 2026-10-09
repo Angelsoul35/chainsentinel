@@ -93,7 +93,7 @@ false positives: the money-services businesses — the hardest confounders
 
 The numbers are **not** 1.0, and the small train-to-test gap is the point: the detector
 generalises to unseen graphs rather than memorising one. The residual errors are
-explainable (see "Honest limits"), not random.
+explainable (see "Limits"), not random.
 
 ## Quickstart
 
@@ -152,11 +152,11 @@ chainsentinel/
 See [`docs/architecture.md`](docs/architecture.md), the [ADRs](docs/adr/), and the Spanish
 study guide in [`docs/estudio/`](docs/estudio/).
 
-## Honest limits
+## Limits (measured, not hidden)
 
 - **The data is synthetic, and that caps realism.** Even with the confounders, a generated
   graph is more separable than a real chain with millions of accounts, mixers, and exchanges.
-  The ROC-AUC (~0.995) is high because the *ranking* is easy on this data; the honest signal
+  The ROC-AUC (~0.995) is high because the *ranking* is easy on this data; the signal that matters
   is the **operating-point** precision/recall (~0.95 / ~0.99) and that they hold on graphs the
   model never saw. On real data both would be lower and the threshold would need re-tuning on
   labelled history.

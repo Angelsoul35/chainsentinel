@@ -56,7 +56,7 @@ grafo de `generate.py` incluye, a propósito, **cuentas legítimas que *parecen*
 
 Los MSB son los más difíciles: disparan **dos** firmas a la vez, igual que un recolector. Un
 sistema AML real genera falsos positivos con MSB; el nuestro también, y por eso el falso positivo
-que queda es casi siempre un MSB. Eso es honesto: el error del modelo cae donde el problema es de
+que queda es casi siempre un MSB. Eso es lo esperado: el error del modelo cae donde el problema es de
 verdad ambiguo, no al azar.
 
 ## Medir sin trampa (fuga de datos)

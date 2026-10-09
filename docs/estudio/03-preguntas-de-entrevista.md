@@ -20,9 +20,12 @@ alertas. Lo detectamos por la fracción de depósitos bajo el umbral hacia un re
 Las reglas son explicables pero frágiles; el modelo captura más pero es caja negra. Juntos:
 alertas fuertes y explicables. Es la forma real de un sistema AML.
 
-**¿Por qué el fondo sintético es acíclico?**
-Porque un grafo aleatorio está lleno de ciclos cortos y la señal de ciclo marcaría a todos. Con
-un fondo de pagos (pagadores → comercios), acíclico, un ciclo es una señal real.
+**¿Por qué el fondo de pagos es mayormente acíclico, y por qué igual añades ciclos benignos?**
+Un grafo aleatorio está lleno de ciclos cortos y la señal de ciclo marcaría a todos; con un
+fondo de pagos (pagadores → comercios) un ciclo *resalta*. Pero añadimos a propósito bucles de
+reembolso legítimos (A → B → A), así que hay ciclos benignos: `in_cycle` queda como señal
+**ambigua**, no como etiqueta. Es la dificultad realista — el detector no puede marcar todo
+ciclo como lavado.
 
 **¿Cómo evitas confundir un comercio legítimo con un recolector?**
 Un comercio recibe de muchos, pero con montos variados y sin reenviar. El recolector recibe
@@ -38,8 +41,10 @@ redacta; la detección viene de reglas y modelo, y un humano revisa.
 **¿Qué le falta para producción?**
 Escala (millones de cuentas, grafos enormes), manejo de mixers y exchanges, etiquetas reales
 para entrenar, umbrales calibrados contra falsos positivos, y trazabilidad/auditoría de cada
-alerta. Las métricas perfectas de aquí son por el dato sintético limpio; en real serían más
-bajas.
+alerta. Las métricas de aquí (precisión ~0.95, recall ~0.99 en grafos no vistos) **no son 1.0**
+precisamente porque el dato tiene confundidores realistas; aun así, en datos reales serían más
+bajas, porque un grafo generado sigue siendo más separable que una cadena real con millones de
+cuentas.
 
 **¿Cómo medirías el sistema en producción?**
 Precisión (de las alertas, cuántas eran reales) y recall (de lo real, cuánto detecté), pero

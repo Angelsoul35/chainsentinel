@@ -14,15 +14,30 @@ def test_generate_has_suspicious_accounts():
     assert {"cycle_a", "cycle_b", "cycle_c"} <= suspicious
 
 
-def test_features_columns_and_cycle_signal(sample):
-    txs, _ = sample
+def test_cycle_signal_flags_injected_cycle_but_is_not_a_giveaway(sample):
+    txs, suspicious = sample
     feat = build_features(txs)
     for col in FEATURE_COLUMNS:
         assert col in feat.columns
-    # the injected cycle is flagged; the (acyclic) background is not
+
+    # The injected round-tripping cycle is detected.
     assert feat.loc["cycle_a"]["in_cycle"] == 1
-    normal = [a for a in feat.index if a.startswith("acct_")]
-    assert feat.loc[normal]["in_cycle"].mean() < 0.05
+
+    # But the benign refund loops (A -> B -> A) also create cycles, so being in a
+    # cycle is an *ambiguous* signal, not a label: some legitimate background
+    # accounts sit in cycles too. This is the false-positive pressure that stops
+    # the round_tripping rule from being a free giveaway. If the refund-loop
+    # confounders were removed, this list would be empty and the test would fail.
+    benign_in_cycle = [
+        a
+        for a in feat.index
+        if a.startswith("acct_") and a not in suspicious and feat.loc[a]["in_cycle"] == 1
+    ]
+    assert benign_in_cycle, "refund-loop confounders should put some benign accounts in cycles"
+
+    # Yet cycles remain the exception in the plain background, not the rule.
+    background = [a for a in feat.index if a.startswith("acct_")]
+    assert feat.loc[background]["in_cycle"].mean() < 0.15
 
 
 def test_collector_has_structuring_signal(sample):

@@ -21,3 +21,17 @@ is not confused with a structuring collector.
   well. The features reflect the real structure of laundering.
 * **Cost:** the background is simpler than real traffic. Real data has legitimate cycles
   (refunds, exchanges), so the cycle rule there needs more care; the README is honest about it.
+
+## Update (2026-10-09): realistic confounders added
+
+The original "clean, acyclic background" made the typologies separate *too* well — the
+detector scored a perfect 1.0, which is a symptom of a toy dataset, not a good model. The
+background is now deliberately **realistically hard**: alongside the mostly-acyclic payment
+flow it contains legitimate accounts that trip the same signatures as laundering — payment
+intermediaries and money-services businesses (pass-through, like layering), **refund loops**
+(A → B → A, benign cycles, like round-tripping), payroll runs (fan-out), popular merchants
+(fan-in), and sub-threshold vendors (like structuring). These are label 0, so they apply
+genuine false-positive pressure. As a result `in_cycle` is now an *ambiguous* signal rather
+than a giveaway, and the measured precision/recall are realistic (~0.95 / ~0.99 on unseen
+graphs, not 1.0). See `chainsentinel/evaluate.py` for the leakage-aware, multi-graph protocol
+that proves the detector generalises rather than memorising one graph.

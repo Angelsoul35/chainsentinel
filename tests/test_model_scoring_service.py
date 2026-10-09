@@ -24,11 +24,32 @@ def test_model_trains_and_scores(sample, tmp_path):
     assert latest_version(tmp_path) == model.version
 
 
-def test_rule_and_combined_score():
+def test_rule_score_grows_with_evidence():
     assert rule_score([]) == 0.0
-    hits = [TypologyHit(name="structuring", detail="x", severity=0.9)]
-    assert rule_score(hits) > 0
-    assert combined_score(0.8, hits) <= 1.0
+    one = [TypologyHit(name="structuring", detail="x", severity=0.9)]
+    two = one + [TypologyHit(name="layering", detail="y", severity=0.8)]
+    assert 0.0 < rule_score(one) < rule_score(two) <= 1.0
+
+
+def test_combined_score_is_noisy_or_not_a_diluting_average():
+    """The fusion must never dilute a confident signal below either source.
+
+    This is the regression guard for the fusion bug: a weighted average of a
+    0.9 model score and a 0.0 rule score collapses to ~0.45 and the account
+    falls under the alert threshold, so real laundering would be missed. A
+    noisy-OR keeps it at 0.9. Mutating ``combined_score`` back to a weighted
+    average makes the first assertion fail.
+    """
+    # A confident model score with no rule hit stays confident (not halved).
+    assert combined_score(0.9, []) == 0.9
+    # A strong rule with a silent model still raises the account.
+    strong = [TypologyHit(name="structuring", detail="x", severity=0.9)]
+    assert combined_score(0.0, strong) == rule_score(strong) > 0.0
+    # Noisy-OR is always at least the max of the two sources, and bounded by 1.
+    for ml in (0.0, 0.3, 0.7, 0.95):
+        for hits in ([], strong):
+            fused = combined_score(ml, hits)
+            assert max(ml, rule_score(hits)) - 1e-9 <= fused <= 1.0
     assert combined_score(0.0, []) == 0.0
 
 
@@ -38,8 +59,11 @@ def test_service_detects_laundering(service):
     true_positives = len(flagged & suspicious)
     precision = true_positives / len(flagged)
     recall = true_positives / len(suspicious)
-    assert precision >= 0.9
-    assert recall >= 0.6
+    # Honest floors below the measured operating point (P~0.92, R~1.0 on this
+    # graph): recall is the binding constraint for AML, precision stays high
+    # despite the legitimate confounders designed to draw false positives.
+    assert recall >= 0.95
+    assert precision >= 0.85
     # alerts are sorted by score, highest first
     scores = [a.score for a in result.alerts]
     assert scores == sorted(scores, reverse=True)

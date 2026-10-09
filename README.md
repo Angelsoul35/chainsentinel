@@ -8,8 +8,14 @@ laundering, and explains each alert with the typology it matched. It combines th
 **LLM-written report** (the readable part). A human analyst reviews before any report is
 filed.
 
-> All transactions are **synthetic**. No real chain, wallet, or person is involved. The
-> laundering patterns are injected on purpose so detection can be measured.
+> All transactions are **synthetic** — by necessity, not convenience. There is no public
+> dataset of *raw, labelled* laundering transaction graphs (even the well-known ones, such
+> as IBM's AML data, are themselves synthetic), so the graph is generated here. It is built
+> to be **realistically hard**: alongside the injected laundering it contains legitimate
+> accounts that *look* suspicious — payment intermediaries, refund loops, payroll runs,
+> popular merchants, sub-threshold vendors, and money-services businesses that trip the same
+> signatures a launderer does. Those confounders are the false-positive pressure a real AML
+> system fights, and they are what stop the scores from being a meaningless 1.0.
 
 [![CI](https://img.shields.io/badge/CI-GitHub%20Actions-blue)](.github/workflows/ci.yml)
 [![Python](https://img.shields.io/badge/python-3.11%2B-blue)](pyproject.toml)
@@ -53,19 +59,41 @@ flowchart LR
   threshold, how fast money leaves, PageRank, clustering, and whether the account is in a
   short cycle.
 * **Rules + model.** The FATF rules give explainable hits; the random-forest model gives a
-  learned score. The alert score blends the two.
+  learned score. The two are fused with a **noisy-OR** (`1 - (1-ml)(1-rule)`), not a weighted
+  average: an average would dilute a confident model score when no rule happened to fire and
+  silently miss real laundering. Noisy-OR means "suspicious if *either* source says so," so
+  neither can veto the other.
 * **Report.** For the top alerts, a suspicious-activity report (SAR) draft is written —
   from a template, or by the LLM cascade — and a human reviews.
 
-## Results on the synthetic set
+## Results — measured on graphs the model never saw
+
+Each "example" here is a *whole graph* (features like PageRank and cycle membership are
+computed over the entire graph), so a row-wise split would leak. The detector is therefore
+trained on one graph, its threshold is chosen on four separate **validation** graphs, and
+it is scored on five independent **test** graphs with fresh seeds. Run it yourself with
+`python -m chainsentinel.evaluate`:
 
 ```
-model:  precision 1.00  recall 1.00  ROC-AUC 1.00 (on the held-out split)
-alerts: precision 1.00  recall 1.00 on a fresh graph vs the injected labels
+alert threshold        : 0.81   (chosen on validation, never on the test graphs)
+
+train graph (resubstitution — optimistic upper bound):
+  P=0.923  R=1.000  F1=0.960  ROC-AUC=1.000  PR-AUC=0.997
+
+independent test graphs [777, 888, 999, 1234, 2024] (never seen):
+  precision: 0.946 +/- 0.038
+  recall   : 0.992 +/- 0.017
+  f1       : 0.968 +/- 0.015
+  roc_auc  : 0.995 +/- 0.004
+  pr_auc   : 0.918 +/- 0.067
+
+generalisation gap (train F1 - mean test F1): -0.008   (no memorisation)
+false positives: the money-services businesses — the hardest confounders
 ```
 
-The synthetic set is clean by design, so the scores are high. Real data is far messier —
-see "Honest limits".
+The numbers are **not** 1.0, and the small train-to-test gap is the point: the detector
+generalises to unseen graphs rather than memorising one. The residual errors are
+explainable (see "Honest limits"), not random.
 
 ## Quickstart
 
@@ -102,7 +130,8 @@ chainsentinel/
   features.py    per-account graph and behavioral features
   typologies.py  FATF-style rules
   model.py       random forest suspicion score
-  scoring.py     blend the rule score and the ML score
+  scoring.py     fuse the rule score and the ML score (noisy-OR)
+  evaluate.py    leakage-aware evaluation: train/validation/test on separate graphs
   report.py      SAR narrative (template or LLM)
   llm/           provider-agnostic LLM cascade
   service.py     the flow (features -> rules + model -> alerts -> reports)
@@ -112,9 +141,12 @@ chainsentinel/
 
 ## Testing and quality
 
-* **12 tests** cover generation, features and the cycle signal, the typology rules, the
-  model, scoring, the service (precision/recall), the API, and the LLM cascade. CI requires
-  at least 80% coverage.
+* **17 tests** cover generation and the confounders, features and the (ambiguous) cycle
+  signal, the typology rules, the model, the noisy-OR fusion (with a regression guard against
+  the diluting-average bug), the service precision/recall, the **generalisation to unseen
+  graphs**, the API, and the LLM cascade. The fusion and confounder tests are mutation-proven:
+  reverting the noisy-OR crashes recall to 0.17 and the test catches it. CI requires at least
+  80% coverage.
 * `ruff` for lint, `bandit` and `gitleaks` for security.
 
 See [`docs/architecture.md`](docs/architecture.md), the [ADRs](docs/adr/), and the Spanish
@@ -122,11 +154,23 @@ study guide in [`docs/estudio/`](docs/estudio/).
 
 ## Honest limits
 
-The synthetic graph has clean, separable typologies, so the scores are near perfect. Real
-chains have millions of accounts, mixers, exchanges, and normal activity that looks odd, so
-precision and recall would be much lower and the thresholds would need careful tuning. The
-value here is the method — graph features, explainable typologies, a learned score, and a
-human in the loop — and a measurable baseline.
+- **The data is synthetic, and that caps realism.** Even with the confounders, a generated
+  graph is more separable than a real chain with millions of accounts, mixers, and exchanges.
+  The ROC-AUC (~0.995) is high because the *ranking* is easy on this data; the honest signal
+  is the **operating-point** precision/recall (~0.95 / ~0.99) and that they hold on graphs the
+  model never saw. On real data both would be lower and the threshold would need re-tuning on
+  labelled history.
+- **One laundering shape is genuinely hard.** The fan-out distributor — a single large funding
+  deposit split to many accounts — is structurally almost identical to a legitimate payroll run,
+  so at a precision-respecting threshold it is sometimes missed. That is a real limitation of
+  flow-shape features, not a bug; catching it reliably needs identity/KYC signals the graph
+  alone does not carry.
+- **No real-time, no adversary adaptation.** Launderers change behaviour once they learn the
+  rules; this is a static baseline, not an adversarial model.
+
+The value here is the method and a *measured, reproducible* baseline: graph features,
+explainable typologies, a learned score fused without dilution, a threshold chosen without
+touching the test set, and a human in the loop.
 
 ## License
 

@@ -29,6 +29,9 @@ umbral**, qué tan rápido sale el dinero, PageRank, clustering, y si la cuenta 
 > al grafo de dinero: mide la "importancia" de un nodo según quién le transfiere.
 
 > **Concepto — ciclo.** Un camino que vuelve al punto de partida. En lavado, un ciclo es
-> round-tripping. Por eso el fondo sintético se diseña **acíclico** (pagos de pagadores a
-> comercios): así un ciclo es una señal real y no ruido. (Ver
+> round-tripping. El fondo de pagos (pagadores → comercios) es **mayormente acíclico**, así
+> que un ciclo *resalta*. Pero a propósito añadimos **bucles de reembolso** legítimos
+> (A → B → A, un comercio que devuelve dinero a un cliente): crean ciclos **benignos**. Por
+> eso `in_cycle` es una señal **ambigua**, no una etiqueta — y ahí está la dificultad
+> realista: el detector no puede marcar todo ciclo como lavado. (Ver
 > [ADR-0003](../adr/0003-graph-features-and-acyclic-background.md).)
